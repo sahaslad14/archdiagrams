@@ -1,0 +1,41 @@
+digraph "Contoso Order Processing Architecture" {
+  graph [label="Contoso Order Processing Architecture", labelloc=t, splines=ortho, rankdir=TB];
+  node [shape=box, style=rounded];
+  users [label="Users"];
+  afd [label="Azure Front Door"];
+  agw [label="Application Gateway\n(WAF)"];
+  webapp [label="Web App"];
+  backend_api [label="Backend API"];
+  func_app [label="Function App"];
+  service_bus [label="Service Bus"];
+  sql_db [label="SQL Database"];
+  storage [label="Storage Account"];
+  keyvault [label="Key Vault"];
+  azfw [label="Azure Firewall"];
+  law [label="Log Analytics"];
+  appi [label="Application Insights"];
+
+  users -> afd;
+  afd -> agw;
+  agw -> webapp;
+  webapp -> backend_api;
+  backend_api -> sql_db;
+  backend_api -> storage;
+  func_app -> service_bus;
+  service_bus -> func_app;
+  func_app -> sql_db;
+  webapp -> keyvault;
+  backend_api -> keyvault;
+  func_app -> keyvault;
+  webapp -> azfw;
+  backend_api -> azfw;
+  func_app -> azfw;
+  webapp -> law;
+  backend_api -> law;
+  func_app -> law;
+  sql_db -> law;
+  storage -> law;
+  webapp -> appi;
+  backend_api -> appi;
+  func_app -> appi;
+}
