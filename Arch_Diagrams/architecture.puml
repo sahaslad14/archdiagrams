@@ -1,0 +1,55 @@
+@startuml
+skinparam packageStyle rect
+
+actor "Users" as Users
+
+package "Azure (External)" {
+  rectangle "Azure Front Door\nafd-contoso" as AFD
+}
+
+package "vnet-contoso-auea-001\n(10.10.0.0/16)" as VNET {
+  package "snet-frontend\n(10.10.1.0/24)" as FRONTEND {
+    rectangle "Application Gateway (WAF)\nagw-contoso" as AGW
+    rectangle "App Service Plan\nasp-contoso-prod" as ASP_WEB
+    rectangle "Web App\napp-frontend-portal" as WEBAPP
+    note right of FRONTEND
+      NSG: nsg-snet-frontend
+    end note
+  }
+
+  package "snet-backend\n(10.10.2.0/24)" as BACKEND {
+    rectangle "App Service Plan (internal)\nasp-contoso-backend" as ASP_BACKEND
+    rectangle "Backend App Service\napp-order-api" as API
+    rectangle "Function App\nfunc-order-processor" as FUNC
+    rectangle "Service Bus\nsb-contoso-orders" as SB
+    note right of BACKEND
+      NSG: nsg-snet-backend
+    end note
+  }
+
+  package "snet-data\n(10.10.3.0/24)" as DATA {
+    rectangle "SQL Server\nsqlsrv-contoso" as SQLSRV
+    rectangle "SQL DB\nsqldb-orders\n(private endpoint: pe-sqldb)" as SQLDB
+    rectangle "Storage Account\nstcontosodata001\n(private endpoint: pe-storage)" as STORAGE
+    rectangle "Key Vault\nkv-contoso-prod\n(private endpoint: pe-kv)" as KV
+    note right of DATA
+      NSG: nsg-snet-data
+      Route Table: rt-snet-default
+    end note
+  }
+
+  rectangle "Azure Firewall\nazfw-contoso" as AZFW
+}
+
+AFD --> AGW : Forward requests
+AGW --> WEBAPP : HTTP(S)
+WEBAPP --> API : HTTP(S)/API calls
+API --> SQLDB : TDS/SQL via private endpoint
+API --> STORAGE : REST via private endpoint
+FUNC --> SB : enqueue
+SB --> SQLDB : messages processed → DB
+WEBAPP --> KV : get secrets
+API --> KV : get secrets
+FUNC --> KV : get secrets
+
+@enduml
